@@ -6,7 +6,9 @@ export default {
       animation: {},
       keyframe: {}
     },
-    fontFamily: {}
+    fontFamily: {
+      'noto-sans': ['Noto Sans TC']
+    }
   },
   plugins: [],
 }
