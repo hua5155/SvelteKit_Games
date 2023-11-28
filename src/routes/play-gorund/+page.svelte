@@ -1,5 +1,5 @@
 <script lang="ts">
-	import FixedLengthArray from './fixedLengthArray.svelte';
+	import FixedLengthArray from './FixedLengthArray.svelte';
 </script>
 
 <FixedLengthArray></FixedLengthArray>

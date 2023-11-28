@@ -1,10 +1,9 @@
 <script lang="ts">
-	import Grid from './grid.svelte';
-
-	import z from 'zod';
+	import Grid from './Grid.svelte';
+	import JustifyCenter from '$lib/JustifyCenter.svelte';
+	import MomentaryButton from './MomentaryButton.svelte';
 
 	import { setContext } from 'svelte';
-	import ToggleSwitch from '$lib/ToggleSwitch.svelte';
 
 	function calculateWinner(grid: string[]): GameStatus {
 		const winCondition = [
@@ -44,7 +43,6 @@
 		else girdCopy[position] = 'O';
 		move += 1;
 		history.set(move, girdCopy);
-		xIsNext = !xIsNext;
 	}
 
 	function gameReset() {
@@ -55,7 +53,6 @@
 			[...Array(9)].map(() => '')
 		);
 		gridValue = history.get(move)!;
-		xIsNext = move % 2 === 0;
 		gameStaus = '';
 	}
 
@@ -75,6 +72,7 @@
 
 	$: {
 		move;
+		xIsNext = move % 2 === 0;
 		gridValue = history.get(move)!;
 		gameStaus = calculateWinner(gridValue);
 
@@ -85,60 +83,77 @@
 	}
 </script>
 
-<div class="flex flex-row gap-10">
-	<div class="grid w-fit grid-flow-row grid-cols-3">
-		{#each gridValue as value, index}
-			<Grid
-				{value}
-				on:click={() => {
-					handleClick(index);
-				}}
-			></Grid>
-		{/each}
-	</div>
-
-	<div class="flex flex-col gap-5">
-		<ToggleSwitch bind:switchState={debugMode}>
-			<span slot="left-text">debug mode</span>
-		</ToggleSwitch>
-		<button
-			class="h-fit w-fit rounded-full bg-cyan-500 px-5 pb-1 text-xl hover:bg-cyan-600"
-			on:click={() => {
-				gameReset();
-			}}
-		>
-			Reset
-		</button>
-		<button
-			class="h-fit w-fit rounded-full bg-cyan-500 px-5 pb-1 text-xl hover:bg-cyan-600"
-			on:click={() => {
-				if (move === 0) return;
-				move -= 1;
-			}}
-		>
-			Undo
-		</button>
-		<button
-			class="h-fit w-fit rounded-full bg-cyan-500 px-5 pb-1 text-xl hover:bg-cyan-600"
-			on:click={() => {
-				if (move === [...history].length - 1) return;
-				move += 1;
-			}}
-		>
-			Redo
-		</button>
-	</div>
-</div>
-
-{#if debugMode}
-	<div>
-		<p>{`moves : ${move}/${[...history].length - 1}`}</p>
-	</div>
-	<div>
-		{#key move}
-			{#each history as record}
-				<p>{`${record[0]} : ${record[1]}`}</p>
+<JustifyCenter>
+	<div class="flex h-fit w-fit flex-col items-center">
+		<div class="h-10"></div>
+		<div class="grid h-fit w-fit grid-flow-row grid-cols-3">
+			{#each gridValue as value, index}
+				<Grid
+					on:click={() => {
+						handleClick(index);
+					}}
+				>
+					{value}
+				</Grid>
 			{/each}
-		{/key}
+		</div>
+		<div class="h-10"></div>
+		{#if gameStaus === ''}
+			<p class="text-xl">{`${xIsNext ? 'X' : 'O'}'s Turn'`}</p>
+		{:else}
+			<p class="text-xl">{`${gameStaus}`}</p>
+		{/if}
+		<div class="h-10"></div>
+		<div class="flex h-fit w-fit flex-row gap-5 [&>*]:h-9 [&>*]:w-28">
+			<button
+				class="inline-flex h-fit w-fit items-center justify-center rounded-full bg-[--color] p-0.5 text-xl text-cyan-400 transition-colors duration-300 hover:bg-[hsl(180,1%,45%)]"
+				style:--color={debugMode ? 'hsl(180,1%,45%)' : 'hsl(180,1%,25%)'}
+				on:click={() => {
+					debugMode = !debugMode;
+				}}
+			>
+				<span
+					class="h-full w-full rounded-full bg-[--color] px-5 transition-colors duration-300 hover:bg-[hsl(180,1%,25%)]"
+					style:--color={debugMode ? 'hsl(180,1%,45%)' : 'hsl(180,1%,25%)'}
+				>
+					Debug
+				</span>
+			</button>
+			<MomentaryButton
+				on:click={() => {
+					gameReset();
+				}}
+			>
+				Reset
+			</MomentaryButton>
+			<MomentaryButton
+				on:click={() => {
+					if (move === 0) return;
+					move -= 1;
+				}}
+			>
+				Undo
+			</MomentaryButton>
+			<MomentaryButton
+				on:click={() => {
+					if (move === [...history].length - 1) return;
+					move += 1;
+				}}
+			>
+				Redo
+			</MomentaryButton>
+		</div>
+
+		{#if debugMode}
+			<div class="h-10"></div>
+			<div class="h-fit w-full rounded-lg bg-[hsl(180,1%,25%)] px-8 py-5">
+				<p>{`moves : ${move}/${[...history].length - 1}`}</p>
+				{#key move}
+					{#each history as record}
+						<p class:line-through={move < record[0]}>{`${record[0]} : ${record[1]}`}</p>
+					{/each}
+				{/key}
+			</div>
+		{/if}
 	</div>
-{/if}
+</JustifyCenter>
