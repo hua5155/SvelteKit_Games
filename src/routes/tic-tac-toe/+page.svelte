@@ -3,8 +3,6 @@
 	import JustifyCenter from '$lib/JustifyCenter.svelte';
 	import MomentaryButton from './MomentaryButton.svelte';
 
-	import { setContext } from 'svelte';
-
 	function calculateWinner(grid: string[]): GameStatus {
 		const winCondition = [
 			[0, 1, 2], // top      -
@@ -47,7 +45,6 @@
 
 	function gameReset() {
 		move = 0;
-		history.clear();
 		history.set(
 			move,
 			[...Array(9)].map(() => '')
@@ -59,7 +56,6 @@
 	type GameStatus = 'winner is O' | 'winner is X' | 'draw' | '';
 
 	let debugMode = true;
-	setContext('debugMode', debugMode);
 
 	let move = 0;
 	const history = new Map<number, string[]>().set(
