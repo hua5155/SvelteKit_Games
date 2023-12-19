@@ -23,7 +23,6 @@
 	const debugMode = writable(true);
 	export const readDebugMode = readonly(debugMode);
 
-	const move = createStore(0);
 	const difficulty = writable(difficulties.beginner);
 	const mine = writable(new Set<number>());
 	const mask = writable(
@@ -32,7 +31,6 @@
 	const flag = writable(new Set<number>());
 	const hint = writable(new Map<number, number>());
 
-	export const readMove = readonly(move);
 	export const readDifficulty = readonly(difficulty);
 	export const readMine = readonly(mine);
 	export const readMask = readonly(mask);
@@ -48,7 +46,7 @@
 			const positions = new Set<number>();
 
 			const { col, row, mine } = $difficulty;
-			while ([...positions].length < mine) {
+			while (positions.size < mine) {
 				positions.add(Math.floor(Math.random() * (col * row)));
 			}
 
@@ -76,6 +74,7 @@
 		}
 
 		move.reset();
+		history.clear();
 		flag.update((set) => {
 			set.clear();
 			return set;
@@ -121,8 +120,43 @@
 		return counter;
 	}
 
+	function calculateStatus() {
+		function compareSet<Type>(A: Set<Type>, B: Set<Type>) {
+			const newA = new Set(A);
+			const newB = new Set(B);
+
+			if (newA.size !== newB.size) return false;
+
+			newA.forEach((value) => {
+				newB.delete(value);
+			});
+
+			if (newB.size !== 0) return false;
+			return true;
+		}
+
+		function setDifferences<Type>(A: Set<Type>, B: Set<Type>) {
+			const differences = new Set([...A, ...B]);
+			A.forEach((index) => {
+				differences.delete(index);
+			});
+			return differences;
+		}
+
+		$mine.forEach((index) => {
+			if (!$mask.has(index)) console.log('YOU DIED');
+		});
+
+		if (compareSet($mine, $mask)) {
+			console.log('YOU WIN');
+			flag.set(new Set([...$mask]));
+		}
+	}
+
 	function handleRClick(index: number) {
 		if (!$mask.has(index)) return;
+
+		const indexes = new Set([index]);
 
 		flag.update((set) => {
 			if (!set.delete(index)) {
@@ -130,6 +164,9 @@
 			}
 			return set;
 		});
+
+		const newHistory: History = { event: 'Right', indexes: indexes };
+		writeHistory(newHistory);
 	}
 
 	function handleLClick(index: number) {
@@ -147,6 +184,7 @@
 			if (!$mask.has(index)) return;
 			if ($flag.has(index)) return;
 
+			indexes.add(index);
 			mask.update((set) => {
 				set.delete(index);
 				return set;
@@ -159,6 +197,8 @@
 			}
 		}
 
+		const indexes = new Set([index]);
+
 		if ($mask.has(index)) {
 			digMine(index);
 		} else {
@@ -168,6 +208,77 @@
 				digMine(index);
 			});
 		}
+
+		const newHistory: History = { event: 'Left', indexes: indexes };
+		writeHistory(newHistory);
+	}
+
+	function writeHistory(newhistory: History) {
+		if (newhistory.indexes.size === 0) return;
+
+		history.set($move, newhistory);
+		move.update((value) => (value += 1));
+		redoLimit.update((value) => (value = $move));
+	}
+
+	function undoHistory() {
+		if ($move === 0) return;
+
+		move.update((value) => (value -= 1));
+		const newHistory = history.get($move)!;
+		if (newHistory.event === 'Left') {
+			mask.update((set) => {
+				newHistory.indexes.forEach((index) => {
+					set.add(index);
+				});
+				return set;
+			});
+		} else {
+			flag.update((set) => {
+				newHistory.indexes.forEach((index) => {
+					if (!set.delete(index)) {
+						set.add(index);
+					}
+				});
+				return set;
+			});
+		}
+	}
+	function redoHistory() {
+		if ($move === $redoLimit) return;
+
+		const newHistory = history.get($move)!;
+		if (newHistory.event === 'Left') {
+			mask.update((set) => {
+				newHistory.indexes.forEach((index) => {
+					set.delete(index);
+				});
+				return set;
+			});
+		} else {
+			flag.update((set) => {
+				newHistory.indexes.forEach((index) => {
+					if (!set.delete(index)) {
+						set.add(index);
+					}
+				});
+				return set;
+			});
+		}
+		move.update((value) => (value += 1));
+	}
+
+	type ClickEvent = 'Right' | 'Left';
+	type History = { event: ClickEvent; indexes: Set<number> };
+
+	const move = createStore(0);
+	const redoLimit = createStore(0);
+	const history = new Map<number, History>();
+
+	$: {
+		$mask;
+
+		calculateStatus();
 	}
 </script>
 
@@ -187,6 +298,34 @@
 	}}
 >
 	debugMode
+</button>
+<button
+	class=""
+	on:click={() => {
+		// console.log('mine', $mine);
+		// console.log('mask', $mask);
+		// console.log('flag', $flag);
+		console.log(`${$move} / ${$redoLimit}`);
+		console.log('history', history);
+	}}
+>
+	log
+</button>
+<button
+	class=""
+	on:click={() => {
+		undoHistory();
+	}}
+>
+	undo
+</button>
+<button
+	class=""
+	on:click={() => {
+		redoHistory();
+	}}
+>
+	redo
 </button>
 
 <section

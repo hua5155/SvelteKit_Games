@@ -1,6 +1,5 @@
 <script lang="ts">
 	import {
-		readMove,
 		readDifficulty,
 		readMine,
 		readHint,
@@ -28,8 +27,6 @@
 	let isBotLeft = index === $readDifficulty.col * ($readDifficulty.row - 1);
 
 	$: {
-		$readMove;
-
 		isMasked = $readMask.has(index);
 		isFlagged = $readFlag.has(index);
 		isMine = $readMine.has(index);
