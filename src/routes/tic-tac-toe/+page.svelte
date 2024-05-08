@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Grid from './Grid.svelte';
-	import JustifyCenter from '$lib/JustifyCenter.svelte';
 	import MomentaryButton from './MomentaryButton.svelte';
 
 	function calculateWinner(grid: string[]): GameStatus {
@@ -35,6 +34,7 @@
 
 	function handleClick(position: number) {
 		if (gameStaus !== '') return;
+		if (gridValue[position] !== '') return;
 
 		let girdCopy = [...gridValue]; // use spread syntax so I'm not copying a pointer to array.
 		if (xIsNext === true) girdCopy[position] = 'X';
@@ -55,7 +55,7 @@
 
 	type GameStatus = 'winner is O' | 'winner is X' | 'draw' | '';
 
-	let debugMode = true;
+	let debugMode = false;
 
 	let move = 0;
 	const history = new Map<number, string[]>().set(
@@ -79,7 +79,7 @@
 	}
 </script>
 
-<JustifyCenter>
+<main class="flex h-full w-full flex-col items-center">
 	<div class="flex h-fit w-fit flex-col items-center">
 		<div class="h-10"></div>
 		<div class="grid h-fit w-fit grid-flow-row grid-cols-3">
@@ -152,4 +152,4 @@
 			</div>
 		{/if}
 	</div>
-</JustifyCenter>
+</main>
