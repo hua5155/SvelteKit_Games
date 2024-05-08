@@ -1,11 +1,11 @@
 <script lang="ts">
 	import {
+		readDebugMode,
 		readDifficulty,
 		readMine,
 		readHint,
 		readMask,
-		readFlag,
-		readDebugMode
+		readFlag
 	} from './+page.svelte';
 
 	const emoji = {
@@ -23,8 +23,8 @@
 	let isMine = false;
 	let hint = '';
 
-	let isTopRight = index === $readDifficulty.col - 1;
-	let isBotLeft = index === $readDifficulty.col * ($readDifficulty.row - 1);
+	$: isTopRight = index === $readDifficulty.col - 1;
+	$: isBotLeft = index === $readDifficulty.col * ($readDifficulty.row - 1);
 
 	$: {
 		isMasked = $readMask.has(index);
@@ -49,7 +49,7 @@
 		{/if}
 	{/if}
 	<div
-		class="absolute left-0 top-0 inline-flex h-10 w-10 items-center justify-center bg-[hsl(96,16%,25%)] ease-in-out [transition:transform_300ms,_opacity_300ms] hover:bg-[hsl(96,16%,45%)] group-first:rounded-tl-lg group-last:rounded-br-lg"
+		class="absolute left-0 top-0 flex h-10 w-10 items-center justify-center bg-[hsl(96,16%,25%)] ease-in-out [transition:transform_300ms,_opacity_300ms] hover:bg-[hsl(96,16%,45%)] group-first:rounded-tl-lg group-last:rounded-br-lg"
 		class:rounded-tr-lg={isTopRight}
 		class:rounded-bl-lg={isBotLeft}
 		class:scale-0={!isMasked}

@@ -1,8 +1,8 @@
 <script context="module" lang="ts">
-	import { createStore } from '$lib/store';
 	import { derived, get, readable, readonly, writable } from 'svelte/store';
 
-	const difficulties = {
+	const debugMode = writable(false);
+	const difficultyPresets = {
 		beginner: {
 			col: 10,
 			row: 10,
@@ -19,11 +19,8 @@
 			mine: 99
 		}
 	};
-
-	const debugMode = writable(true);
-	export const readDebugMode = readonly(debugMode);
-
-	const difficulty = writable(difficulties.beginner);
+	const difficulties = ['beginner', 'Intermediate', 'expert'] as const;
+	const difficulty = writable(difficultyPresets.beginner);
 	const mine = writable(new Set<number>());
 	const mask = writable(
 		new Set<number>([...Array(get(difficulty).col * get(difficulty).row).keys()])
@@ -31,6 +28,7 @@
 	const flag = writable(new Set<number>());
 	const hint = writable(new Map<number, number>());
 
+	export const readDebugMode = readonly(debugMode);
 	export const readDifficulty = readonly(difficulty);
 	export const readMine = readonly(mine);
 	export const readMask = readonly(mask);
@@ -40,8 +38,36 @@
 
 <script lang="ts">
 	import Grid from './Grid.svelte';
+	import MomentaryButton from './MomentaryButton.svelte';
+	import NumberInput from '$lib/NumberInput.svelte';
 
-	function init() {
+	function clear() {
+		flag.update((set) => {
+			set.clear();
+			return set;
+		});
+		mask.update((set) => {
+			const total = $difficulty.col * $difficulty.row;
+			for (let index = 0; index < total; index++) {
+				set.add(index);
+			}
+			return set;
+		});
+		mine.update((set) => {
+			set.clear();
+			return set;
+		});
+		hint.update((map) => {
+			map.clear();
+			return map;
+		});
+
+		move.set(0);
+		redoLimit.set(0);
+		history.clear();
+	}
+
+	function randomize() {
 		function randomizeMines() {
 			const positions = new Set<number>();
 
@@ -72,19 +98,6 @@
 
 			return hintMap;
 		}
-
-		move.reset();
-		history.clear();
-		flag.update((set) => {
-			set.clear();
-			return set;
-		});
-		mask.update((set) => {
-			[...Array($difficulty.col * $difficulty.row).keys()].forEach((index) => {
-				set.add(index);
-			});
-			return set;
-		});
 		mine.set(randomizeMines());
 		hint.set(calculateHint());
 	}
@@ -143,17 +156,22 @@
 			return differences;
 		}
 
+		let newPlayerState: PlayerEmoji = '🙂';
+
 		$mine.forEach((index) => {
-			if (!$mask.has(index)) console.log('YOU DIED');
+			if (!$mask.has(index)) newPlayerState = '🤕';
 		});
 
 		if (compareSet($mine, $mask)) {
-			console.log('YOU WIN');
+			newPlayerState = '😎';
 			flag.set(new Set([...$mask]));
 		}
+
+		return newPlayerState;
 	}
 
 	function handleRClick(index: number) {
+		if (playerState !== '🙂') return;
 		if (!$mask.has(index)) return;
 
 		const indexes = new Set([index]);
@@ -185,6 +203,7 @@
 			if ($flag.has(index)) return;
 
 			indexes.add(index);
+
 			mask.update((set) => {
 				set.delete(index);
 				return set;
@@ -197,7 +216,9 @@
 			}
 		}
 
-		const indexes = new Set([index]);
+		if (playerState !== '🙂') return;
+
+		const indexes = new Set<number>();
 
 		if ($mask.has(index)) {
 			digMine(index);
@@ -268,38 +289,32 @@
 		move.update((value) => (value += 1));
 	}
 
-	type ClickEvent = 'Right' | 'Left';
-	type History = { event: ClickEvent; indexes: Set<number> };
+	type History = { event: 'Right' | 'Left'; indexes: Set<number> };
+	type PlayerEmoji = (typeof playerEmoji)[number];
 
-	const move = createStore(0);
-	const redoLimit = createStore(0);
+	let selectedDifficulty: (typeof difficulties)[number] = 'beginner';
+
+	const move = writable(0);
+	const redoLimit = writable(0);
 	const history = new Map<number, History>();
 
-	$: {
-		$mask;
+	const playerEmoji = ['\u{1f642}', '\u{1F915}', '\u{1f60e}'] as const;
+	let playerState: PlayerEmoji = '🙂';
 
-		calculateStatus();
+	$: {
+		$move;
+
+		playerState = calculateStatus();
+	}
+	$: {
+		selectedDifficulty;
+
+		difficulty.set(difficultyPresets[selectedDifficulty]);
+		clear();
 	}
 </script>
 
-<button
-	class=""
-	on:click={() => {
-		init();
-	}}
->
-	init
-</button>
-<button
-	class=""
-	class:text-green-500={$debugMode}
-	on:click={() => {
-		debugMode.update((flag) => !flag);
-	}}
->
-	debugMode
-</button>
-<button
+<!-- <button
 	class=""
 	on:click={() => {
 		// console.log('mine', $mine);
@@ -310,37 +325,112 @@
 	}}
 >
 	log
-</button>
-<button
-	class=""
-	on:click={() => {
-		undoHistory();
-	}}
->
-	undo
-</button>
-<button
-	class=""
-	on:click={() => {
-		redoHistory();
-	}}
->
-	redo
-</button>
+</button> -->
 
-<section
-	class="grid h-fit w-fit grid-cols-[repeat(var(--col),_minmax(0,_1fr))] gap-0"
-	style:--col={$difficulty.col}
->
-	{#each [...Array($difficulty.col * $difficulty.row)] as value, index}
-		<Grid
-			{index}
-			on:click={() => {
-				handleLClick(index);
-			}}
-			on:contextmenu={() => {
-				handleRClick(index);
-			}}
-		></Grid>
-	{/each}
-</section>
+<main class="flex h-full w-full flex-col items-center">
+	<section class="flex h-fit w-fit flex-col items-center">
+		<div class="pt-14"></div>
+		<section class="grid h-fit w-[28rem] grid-cols-3" on:input={() => {}}>
+			<div class="flex flex-col">
+				{#each difficulties as value}
+					<label class="inline-flex items-center gap-1" for={value}>
+						<input
+							class="h-5 w-5 cursor-pointer accent-[hsl(96,16%,45%)]"
+							type="radio"
+							id={value}
+							{value}
+							bind:group={selectedDifficulty}
+						/>
+						{value}
+					</label>
+				{/each}
+				<!-- <label for="">
+					<input type="radio" name="" id="" bind:group={selectDiff} value="custom" />
+					custom
+				</label> -->
+			</div>
+			<!-- {#if selectDiff === 'custom'}
+				<div class="flex flex-col space-y-2">
+					<NumberInput min={10} max={30} name="col" id="col"></NumberInput>
+					<NumberInput min={10} max={30} name="row" id="row"></NumberInput>
+					<NumberInput min={15} max={99} name="mine" id="mine"></NumberInput>
+				</div>
+			{/if} -->
+		</section>
+
+		<div class="pt-10"></div>
+		<section class="grid h-fit w-[28rem] grid-cols-3">
+			<p class="inline-flex items-center self-center justify-self-start align-middle">
+				<span class="text-2xl">{'\u{1f6a9}'}</span>
+				<span>{` ${$flag.size} / ${$difficulty.mine}`}</span>
+			</p>
+			<p class="self-center justify-self-center align-middle text-4xl">{playerState}</p>
+			<p class="self-center justify-self-end align-middle">{`${$move} / ${$redoLimit}`}</p>
+		</section>
+
+		<div class="pt-10"></div>
+		<section
+			class="grid h-fit w-fit grid-cols-[repeat(var(--col),_minmax(0,_1fr))]"
+			style:--col={$difficulty.col}
+		>
+			{#each [...Array($difficulty.col * $difficulty.row)] as value, index}
+				<Grid
+					{index}
+					on:click={() => {
+						if ($mine.size === 0) {
+							do {
+								randomize();
+							} while ($mine.has(index));
+						}
+
+						handleLClick(index);
+					}}
+					on:contextmenu={() => {
+						handleRClick(index);
+					}}
+				></Grid>
+			{/each}
+		</section>
+
+		<div class="pt-10"></div>
+		<section class="flex h-fit w-[28rem] flex-row items-center justify-between">
+			<button
+				class="inline-flex h-fit w-fit items-center justify-center rounded-full bg-[--color] p-0.5 text-xl text-white transition-colors duration-300 hover:bg-[hsl(96,16%,45%)]"
+				style:--color={$debugMode ? 'hsl(96,16%,45%)' : 'hsl(96,16%,25%)'}
+				on:click={() => {
+					debugMode.update((flag) => !flag);
+				}}
+			>
+				<span
+					class="h-full w-full rounded-full bg-[--color] px-5 transition-colors duration-300 hover:bg-[hsl(96,16%,25%)]"
+					style:--color={$debugMode ? 'hsl(96,16%,45%)' : 'hsl(96,16%,25%)'}
+				>
+					Debug
+				</span>
+			</button>
+			<MomentaryButton
+				on:click={() => {
+					clear();
+				}}
+			>
+				clear
+			</MomentaryButton>
+			<MomentaryButton
+				disabled={$move === 0}
+				on:click={() => {
+					undoHistory();
+				}}
+			>
+				undo
+			</MomentaryButton>
+			<MomentaryButton
+				disabled={$move === $redoLimit}
+				on:click={() => {
+					redoHistory();
+				}}
+			>
+				redo
+			</MomentaryButton>
+		</section>
+	</section>
+</main>
