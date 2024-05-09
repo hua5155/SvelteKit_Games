@@ -1,2 +1,5 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<div class="pt-10"></div>
+<main class="flex flex-col items-center">
+	<h1>SvelteKit Games</h1>
+	<h2>Just some games to practice SvelteKit & Tailwind</h2>
+</main>
