@@ -3,7 +3,7 @@
 Doodling with **SvelteKit**, **Tailwind** to write simple games.
 
 ## Todo
-- [ ] Tic Tac Toe
-- [ ] Minesweeper
+- [x] Tic Tac Toe
+- [x] Minesweeper
 - [ ] Cheese terminator?
 - [ ] Snake?
