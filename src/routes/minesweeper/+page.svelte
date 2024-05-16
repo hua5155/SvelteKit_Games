@@ -327,52 +327,49 @@
 	log
 </button> -->
 
-<main class="flex h-full w-full flex-col items-center">
-	<section class="flex h-fit w-fit flex-col items-center">
-		<div class="pt-14"></div>
-		<section class="grid h-fit w-[28rem] grid-cols-3" on:input={() => {}}>
-			<div class="flex flex-col">
-				{#each difficulties as value}
-					<label class="inline-flex items-center gap-1" for={value}>
-						<input
-							class="h-5 w-5 cursor-pointer accent-[hsl(96,16%,45%)]"
-							type="radio"
-							id={value}
-							{value}
-							bind:group={selectedDifficulty}
-						/>
+<main class="relative flex h-full w-full flex-col items-center">
+	<div class="hidden pt-14 md:block"></div>
+	<section class="hidden h-fit w-[28rem] grid-cols-3 md:grid" on:input={() => {}}>
+		<div class="flex flex-col">
+			{#each difficulties as value}
+				<label class="inline-flex items-center gap-1" for={value}>
+					<input
+						class="h-5 w-5 cursor-pointer accent-[hsl(96,16%,45%)]"
+						type="radio"
+						id={value}
 						{value}
-					</label>
-				{/each}
-				<!-- <label for="">
-					<input type="radio" name="" id="" bind:group={selectDiff} value="custom" />
-					custom
-				</label> -->
+						bind:group={selectedDifficulty}
+					/>
+					{value}
+				</label>
+			{/each}
+			<!-- <label for="">
+				<input type="radio" name="" id="" bind:group={selectDiff} value="custom" />
+				custom
+			</label> -->
+		</div>
+		<!-- {#if selectDiff === 'custom'}
+			<div class="flex flex-col space-y-2">
+				<NumberInput min={10} max={30} name="col" id="col"></NumberInput>
+				<NumberInput min={10} max={30} name="row" id="row"></NumberInput>
+				<NumberInput min={15} max={99} name="mine" id="mine"></NumberInput>
 			</div>
-			<!-- {#if selectDiff === 'custom'}
-				<div class="flex flex-col space-y-2">
-					<NumberInput min={10} max={30} name="col" id="col"></NumberInput>
-					<NumberInput min={10} max={30} name="row" id="row"></NumberInput>
-					<NumberInput min={15} max={99} name="mine" id="mine"></NumberInput>
-				</div>
-			{/if} -->
-		</section>
+		{/if} -->
+	</section>
 
-		<div class="pt-10"></div>
-		<section class="grid h-fit w-[28rem] grid-cols-3">
-			<p class="inline-flex items-center self-center justify-self-start align-middle">
-				<span class="text-2xl">{'\u{1f6a9}'}</span>
-				<span>{` ${$flag.size} / ${$difficulty.mine}`}</span>
-			</p>
-			<p class="self-center justify-self-center align-middle text-4xl">{playerState}</p>
-			<p class="self-center justify-self-end align-middle">{`${$move} / ${$redoLimit}`}</p>
-		</section>
+	<div class="pt-10"></div>
+	<section class="grid h-fit w-4/5 grid-cols-3 md:w-[28rem]">
+		<p class="inline-flex items-center self-center justify-self-start align-middle">
+			<span class="text-2xl">{'\u{1f6a9}'}</span>
+			<span>{` ${$flag.size} / ${$difficulty.mine}`}</span>
+		</p>
+		<p class="self-center justify-self-center align-middle text-4xl">{playerState}</p>
+		<p class="self-center justify-self-end align-middle">{`${$move} / ${$redoLimit}`}</p>
+	</section>
 
-		<div class="pt-10"></div>
-		<section
-			class="grid h-fit w-fit grid-cols-[repeat(var(--col),_minmax(0,_1fr))]"
-			style:--col={$difficulty.col}
-		>
+	<div class="pt-10"></div>
+	<section class="h-fit max-h-[60%] w-fit max-w-[80%] touch-auto overflow-auto rounded-lg">
+		<div class="grid grid-cols-[repeat(var(--col),_2.5rem)]" style:--col={$difficulty.col}>
 			{#each [...Array($difficulty.col * $difficulty.row)] as value, index}
 				<Grid
 					{index}
@@ -390,47 +387,49 @@
 					}}
 				></Grid>
 			{/each}
-		</section>
+		</div>
+	</section>
 
-		<div class="pt-10"></div>
-		<section class="flex h-fit w-[28rem] flex-row items-center justify-between">
-			<button
-				class="inline-flex h-fit w-fit items-center justify-center rounded-full bg-[--color] p-0.5 text-xl text-white transition-colors duration-300 hover:bg-[hsl(96,16%,45%)]"
+	<div class="pt-10"></div>
+	<section
+		class="grid h-fit w-4/5 grid-cols-2 gap-5 md:flex md:w-[28rem] md:flex-row md:items-center md:justify-between"
+	>
+		<button
+			class="inline-flex h-fit w-4/5 items-center justify-center place-self-center rounded-full bg-[--color] p-0.5 text-xl text-white transition-colors duration-300 md:w-fit md:hover:bg-[hsl(96,16%,45%)]"
+			style:--color={$debugMode ? 'hsl(96,16%,45%)' : 'hsl(96,16%,25%)'}
+			on:click={() => {
+				debugMode.update((flag) => !flag);
+			}}
+		>
+			<span
+				class="h-full w-full rounded-full bg-[--color] px-5 transition-colors duration-300 hover:bg-[hsl(96,16%,25%)]"
 				style:--color={$debugMode ? 'hsl(96,16%,45%)' : 'hsl(96,16%,25%)'}
-				on:click={() => {
-					debugMode.update((flag) => !flag);
-				}}
 			>
-				<span
-					class="h-full w-full rounded-full bg-[--color] px-5 transition-colors duration-300 hover:bg-[hsl(96,16%,25%)]"
-					style:--color={$debugMode ? 'hsl(96,16%,45%)' : 'hsl(96,16%,25%)'}
-				>
-					Debug
-				</span>
-			</button>
-			<MomentaryButton
-				on:click={() => {
-					clear();
-				}}
-			>
-				clear
-			</MomentaryButton>
-			<MomentaryButton
-				disabled={$move === 0}
-				on:click={() => {
-					undoHistory();
-				}}
-			>
-				undo
-			</MomentaryButton>
-			<MomentaryButton
-				disabled={$move === $redoLimit}
-				on:click={() => {
-					redoHistory();
-				}}
-			>
-				redo
-			</MomentaryButton>
-		</section>
+				Debug
+			</span>
+		</button>
+		<MomentaryButton
+			on:click={() => {
+				clear();
+			}}
+		>
+			clear
+		</MomentaryButton>
+		<MomentaryButton
+			disabled={$move === 0}
+			on:click={() => {
+				undoHistory();
+			}}
+		>
+			undo
+		</MomentaryButton>
+		<MomentaryButton
+			disabled={$move === $redoLimit}
+			on:click={() => {
+				redoHistory();
+			}}
+		>
+			redo
+		</MomentaryButton>
 	</section>
 </main>

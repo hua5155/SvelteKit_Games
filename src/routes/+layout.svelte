@@ -3,7 +3,7 @@
 </script>
 
 <div
-	class="relative h-fit min-h-screen w-screen overflow-x-hidden bg-black font-noto-sans font-medium text-white"
+	class="relative h-screen w-screen overflow-x-hidden overflow-y-hidden bg-black font-noto-sans font-medium text-white md:h-fit md:min-h-screen md:overflow-y-auto"
 >
 	<nav class="sticky left-0 top-0 z-10 flex h-10 w-full items-center justify-center bg-[#303030]">
 		<div class="flex w-fit gap-5">

@@ -45,6 +45,7 @@
 
 	function gameReset() {
 		move = 0;
+		history.clear();
 		history.set(
 			move,
 			[...Array(9)].map(() => '')
@@ -80,76 +81,90 @@
 </script>
 
 <main class="flex h-full w-full flex-col items-center">
-	<div class="flex h-fit w-fit flex-col items-center">
-		<div class="h-10"></div>
-		<div class="grid h-fit w-fit grid-flow-row grid-cols-3">
-			{#each gridValue as value, index}
-				<Grid
-					on:click={() => {
-						handleClick(index);
-					}}
-				>
-					{value}
-				</Grid>
-			{/each}
-		</div>
-		<div class="h-10"></div>
-		{#if gameStaus === ''}
-			<p class="text-xl">{`${xIsNext ? 'X' : 'O'}'s Turn'`}</p>
-		{:else}
-			<p class="text-xl">{`${gameStaus}`}</p>
-		{/if}
-		<div class="h-10"></div>
-		<div class="flex h-fit w-fit flex-row gap-5 [&>*]:h-9 [&>*]:w-28">
-			<button
-				class="inline-flex h-fit w-fit items-center justify-center rounded-full bg-[--color] p-0.5 text-xl text-cyan-400 transition-colors duration-300 hover:bg-[hsl(180,1%,45%)]"
-				style:--color={debugMode ? 'hsl(180,1%,45%)' : 'hsl(180,1%,25%)'}
+	<div class="h-10"></div>
+	<div class="relative grid aspect-square w-4/5 grid-flow-row grid-cols-3 md:h-fit md:w-fit">
+		{#each gridValue as value, index}
+			<Grid
 				on:click={() => {
-					debugMode = !debugMode;
+					handleClick(index);
 				}}
 			>
-				<span
-					class="h-full w-full rounded-full bg-[--color] px-5 transition-colors duration-300 hover:bg-[hsl(180,1%,25%)]"
-					style:--color={debugMode ? 'hsl(180,1%,45%)' : 'hsl(180,1%,25%)'}
-				>
-					Debug
-				</span>
-			</button>
-			<MomentaryButton
-				on:click={() => {
-					gameReset();
-				}}
-			>
-				Reset
-			</MomentaryButton>
-			<MomentaryButton
-				on:click={() => {
-					if (move === 0) return;
-					move -= 1;
-				}}
-			>
-				Undo
-			</MomentaryButton>
-			<MomentaryButton
-				on:click={() => {
-					if (move === [...history].length - 1) return;
-					move += 1;
-				}}
-			>
-				Redo
-			</MomentaryButton>
-		</div>
-
+				{value}
+			</Grid>
+		{/each}
+		<!-- Mobile debug -->
 		{#if debugMode}
-			<div class="h-10"></div>
-			<div class="h-fit w-full rounded-lg bg-[hsl(180,1%,25%)] px-8 py-5">
-				<p>{`moves : ${move}/${[...history].length - 1}`}</p>
-				{#key move}
-					{#each history as record}
-						<p class:line-through={move < record[0]}>{`${record[0]} : ${record[1]}`}</p>
-					{/each}
-				{/key}
+			<div
+				class="absolute left-0 top-0 flex h-full w-full items-center justify-center rounded-lg bg-[hsl(180,1%,25%)]/80 md:hidden"
+			>
+				<div class="text-left">
+					<p>{`moves : ${move}/${[...history].length - 1}`}</p>
+					{#key move}
+						{#each history as record}
+							<p class:line-through={move < record[0]}>{`${record[0]} : ${record[1]}`}</p>
+						{/each}
+					{/key}
+				</div>
 			</div>
 		{/if}
 	</div>
+	<div class="h-10"></div>
+	{#if gameStaus === ''}
+		<p class="text-xl">{`${xIsNext ? 'X' : 'O'}'s Turn'`}</p>
+	{:else}
+		<p class="text-xl">{`${gameStaus}`}</p>
+	{/if}
+	<div class="h-10"></div>
+	<div class="grid h-fit w-fit grid-cols-2 gap-5 md:grid-cols-4 [&>*]:h-9 [&>*]:w-28">
+		<button
+			class="inline-flex h-fit w-fit items-center justify-center rounded-full bg-[--color] p-0.5 text-xl text-cyan-400 transition-colors duration-300 md:hover:bg-[hsl(180,1%,45%)]"
+			style:--color={debugMode ? 'hsl(180,1%,45%)' : 'hsl(180,1%,25%)'}
+			on:click={() => {
+				debugMode = !debugMode;
+			}}
+		>
+			<span
+				class="h-full w-full rounded-full bg-[--color] px-5 transition-colors duration-300 hover:bg-[hsl(180,1%,25%)]"
+				style:--color={debugMode ? 'hsl(180,1%,45%)' : 'hsl(180,1%,25%)'}
+			>
+				Debug
+			</span>
+		</button>
+		<MomentaryButton
+			on:click={() => {
+				gameReset();
+			}}
+		>
+			Reset
+		</MomentaryButton>
+		<MomentaryButton
+			on:click={() => {
+				if (move === 0) return;
+				move -= 1;
+			}}
+		>
+			Undo
+		</MomentaryButton>
+		<MomentaryButton
+			on:click={() => {
+				if (move === [...history].length - 1) return;
+				move += 1;
+			}}
+		>
+			Redo
+		</MomentaryButton>
+	</div>
+
+	<!-- Desktop debug -->
+	{#if debugMode}
+		<div class="h-10"></div>
+		<div class="hidden h-fit w-96 rounded-lg bg-[hsl(180,1%,25%)] px-8 py-5 md:block">
+			<p>{`moves : ${move}/${[...history].length - 1}`}</p>
+			{#key move}
+				{#each history as record}
+					<p class:line-through={move < record[0]}>{`${record[0]} : ${record[1]}`}</p>
+				{/each}
+			{/key}
+		</div>
+	{/if}
 </main>

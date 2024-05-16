@@ -23,9 +23,6 @@
 	let isMine = false;
 	let hint = '';
 
-	$: isTopRight = index === $readDifficulty.col - 1;
-	$: isBotLeft = index === $readDifficulty.col * ($readDifficulty.row - 1);
-
 	$: {
 		isMasked = $readMask.has(index);
 		isFlagged = $readFlag.has(index);
@@ -35,9 +32,7 @@
 </script>
 
 <button
-	class="group relative h-10 w-10 bg-[hsl(98,11%,14%)] first:rounded-tl-lg last:rounded-br-lg hover:bg-[hsl(98,11%,34%)]"
-	class:rounded-tr-lg={isTopRight}
-	class:rounded-bl-lg={isBotLeft}
+	class="relative aspect-square w-10 bg-[hsl(98,11%,14%)] md:hover:bg-[hsl(98,11%,34%)]"
 	on:click
 	on:contextmenu|preventDefault
 >
@@ -49,9 +44,7 @@
 		{/if}
 	{/if}
 	<div
-		class="absolute left-0 top-0 flex h-10 w-10 items-center justify-center bg-[hsl(96,16%,25%)] ease-in-out [transition:transform_300ms,_opacity_300ms] hover:bg-[hsl(96,16%,45%)] group-first:rounded-tl-lg group-last:rounded-br-lg"
-		class:rounded-tr-lg={isTopRight}
-		class:rounded-bl-lg={isBotLeft}
+		class="absolute left-0 top-0 flex aspect-square w-10 items-center justify-center bg-[hsl(96,16%,25%)] ease-in-out [transition:transform_300ms,_opacity_300ms] md:hover:bg-[hsl(96,16%,45%)]"
 		class:scale-0={!isMasked}
 		class:rounded-lg={!isMasked}
 		class:opacity-50={debugMode}
