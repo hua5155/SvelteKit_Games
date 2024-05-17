@@ -368,7 +368,9 @@
 	</section>
 
 	<div class="pt-10"></div>
-	<section class="h-fit max-h-[60%] w-fit max-w-[80%] touch-auto overflow-auto rounded-lg">
+	<section
+		class="aspect-square w-fit max-w-[80%] touch-auto overflow-auto rounded-lg md:aspect-auto md:h-fit"
+	>
 		<div class="grid grid-cols-[repeat(var(--col),_2.5rem)]" style:--col={$difficulty.col}>
 			{#each [...Array($difficulty.col * $difficulty.row)] as value, index}
 				<Grid
